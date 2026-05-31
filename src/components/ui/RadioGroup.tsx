@@ -1,5 +1,5 @@
 import type { UseFormRegister, FieldValues, Path } from 'react-hook-form'
-import { cn } from './Card'
+import { cn } from '../../lib/cn'
 
 interface RadioOption {
   value: string;
@@ -27,7 +27,7 @@ export const RadioGroup = <T extends FieldValues>({
 }: RadioGroupProps<T>) => {
   return (
     <div className="w-full mb-4 last:mb-0">
-      <label className="text-sm font-semibold mb-3 block font-outfit text-ink leading-snug">{label}</label>
+      <label className="text-sm font-semibold mb-3 block font-outfit text-on-surface leading-snug">{label}</label>
       <div className="flex gap-2 sm:gap-3">
         {options.map((opt) => {
           const id = `${String(name)}-${opt.value.toLowerCase()}`
@@ -37,10 +37,10 @@ export const RadioGroup = <T extends FieldValues>({
               key={opt.value}
               htmlFor={id}
               className={cn(
-                'flex-1 flex items-center justify-center px-3 sm:px-4 py-3.5 min-h-[48px] rounded-xl border cursor-pointer transition-all duration-200 select-none font-semibold text-sm active:scale-[0.98]',
+                'flex-1 flex items-center justify-center px-3 sm:px-4 py-3.5 min-h-[48px] rounded-full border cursor-pointer transition-all duration-200 select-none font-semibold text-sm active:scale-[0.98]',
                 isSelected
-                  ? 'bg-brand text-white border-brand'
-                  : 'bg-white text-ink border-border active:bg-brand-light/30'
+                  ? 'bg-primary text-on-primary border-primary'
+                  : 'bg-surface text-on-surface border-outline active:bg-primary-light/30'
               )}
             >
               <input
@@ -55,7 +55,7 @@ export const RadioGroup = <T extends FieldValues>({
           )
         })}
       </div>
-      {error && <span className="text-xs text-red-600 mt-2 block font-medium">{error}</span>}
+      {error && <span className="text-xs text-error mt-2 block font-medium">{error}</span>}
     </div>
   )
 }

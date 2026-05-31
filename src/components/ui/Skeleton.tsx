@@ -1,11 +1,11 @@
-import { cn } from './Card'
+import { cn } from '../../lib/cn'
 
 interface SkeletonProps {
   className?: string;
 }
 
 export const Skeleton = ({ className }: SkeletonProps) => (
-  <div className={cn('animate-pulse bg-neutral-200 rounded-xl', className)} />
+  <div className={cn('animate-pulse bg-surface-container rounded-xl', className)} />
 )
 
 export const PatientDetailsSkeleton = () => (

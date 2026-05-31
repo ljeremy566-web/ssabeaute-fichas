@@ -1,12 +1,12 @@
 import { createClient } from '@insforge/sdk'
 
-const supabaseUrl = import.meta.env.VITE_INSFORGE_BASE_URL
-const supabaseAnonKey = import.meta.env.VITE_INSFORGE_ANON_KEY
+const insforgeUrl = import.meta.env.VITE_INSFORGE_BASE_URL
+const insforgeAnonKey = import.meta.env.VITE_INSFORGE_ANON_KEY
 
-if (!supabaseUrl || !supabaseAnonKey) {
+if (!insforgeUrl || !insforgeAnonKey) {
   const missing = [
-    !supabaseUrl && 'VITE_INSFORGE_BASE_URL',
-    !supabaseAnonKey && 'VITE_INSFORGE_ANON_KEY',
+    !insforgeUrl && 'VITE_INSFORGE_BASE_URL',
+    !insforgeAnonKey && 'VITE_INSFORGE_ANON_KEY',
   ].filter(Boolean).join(', ')
 
   throw new Error(
@@ -16,7 +16,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   )
 }
 
-export const supabase = createClient({
-  baseUrl: supabaseUrl,
-  anonKey: supabaseAnonKey
+export const insforge = createClient({
+  baseUrl: insforgeUrl,
+  anonKey: insforgeAnonKey
 })

@@ -29,7 +29,7 @@ export const YesNoDetailField = <T extends FieldValues>({
   const isYes = response === 'Si'
 
   return (
-    <div className="mb-6 last:mb-0 pb-6 last:pb-0 border-b border-border last:border-0">
+    <div className="mb-6 last:mb-0 pb-6 last:pb-0 border-b border-outline last:border-0">
       <RadioGroup
         name={radioName}
         label={label}
