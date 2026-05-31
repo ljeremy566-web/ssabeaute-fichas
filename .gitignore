@@ -37,3 +37,10 @@ dist-ssr
 .roo
 .trae
 .windsurf
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
