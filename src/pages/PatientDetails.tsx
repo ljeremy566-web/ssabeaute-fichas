@@ -12,7 +12,7 @@ import { PatientFormModal, type PatientFormData } from '../components/patients/P
 import { cn } from '../lib/cn'
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
-import { downloadFichaPdf, shareViaWhatsApp } from '../lib/generateFichaPdf'
+import { downloadRutinasPdf, downloadFichaPdf, shareViaWhatsApp } from '../lib/generateFichaPdf'
 import { getFichasByPacienteId, deleteFichaWithAssets, type FichaClinica } from '../lib/fichaService'
 import { getPacienteById, updatePaciente, deletePaciente, type Paciente } from '../lib/pacienteService'
 import { calcAge, formatLocalDate, parseLocalDate } from '../lib/dateUtils'
@@ -121,6 +121,29 @@ export const PatientDetails = () => {
     if (!patient) return
     setDownloadingFichaId(ficha.id)
     try {
+      await downloadRutinasPdf(
+        {
+          nombre_completo: patient.nombre_completo ?? '',
+          telefono: patient.telefono ?? undefined,
+        },
+        {
+          fecha_servicio: ficha.fecha_servicio,
+          cuidados_faciales: ficha.cuidados_faciales,
+        }
+      )
+      showSnackbar('PDF de rutinas descargado')
+    } catch (err) {
+      console.error(err)
+      showSnackbar('Error al generar el PDF')
+    } finally {
+      setDownloadingFichaId(null)
+    }
+  }
+
+  const handleDownloadFichaCompletaPdf = async () => {
+    if (!patient || !latestFicha) return
+    setDownloadingFichaId('completa')
+    try {
       await downloadFichaPdf(
         {
           nombre_completo: patient.nombre_completo ?? '',
@@ -128,22 +151,22 @@ export const PatientDetails = () => {
           edad: calcAge(patient.fecha_nacimiento) ?? patient.edad ?? undefined,
         },
         {
-          fecha_servicio: ficha.fecha_servicio,
-          motivo_consulta: ficha.motivo_consulta ?? undefined,
-          datos_medicos: ficha.datos_medicos,
-          cuidados_faciales: ficha.cuidados_faciales,
-          evaluacion_profesional: ficha.evaluacion_profesional,
-          tratamientos_realizados: ficha.tratamientos_realizados,
-          ruta_mapa_facial: ficha.ruta_mapa_facial,
-          ruta_foto_antes: ficha.ruta_foto_antes,
-          ruta_foto_despues: ficha.ruta_foto_despues,
-          ruta_firma: ficha.ruta_firma,
+          fecha_servicio: latestFicha.fecha_servicio,
+          motivo_consulta: latestFicha.motivo_consulta ?? undefined,
+          datos_medicos: latestFicha.datos_medicos,
+          cuidados_faciales: latestFicha.cuidados_faciales,
+          evaluacion_profesional: latestFicha.evaluacion_profesional,
+          tratamientos_realizados: latestFicha.tratamientos_realizados,
+          ruta_mapa_facial: latestFicha.ruta_mapa_facial,
+          ruta_foto_antes: latestFicha.ruta_foto_antes,
+          ruta_foto_despues: latestFicha.ruta_foto_despues,
+          ruta_firma: latestFicha.ruta_firma,
         }
       )
-      showSnackbar('PDF descargado correctamente')
+      showSnackbar('Ficha completa descargada')
     } catch (err) {
       console.error(err)
-      showSnackbar('Error al generar el PDF')
+      showSnackbar('Error al generar el PDF de la ficha completa')
     } finally {
       setDownloadingFichaId(null)
     }
@@ -255,6 +278,21 @@ export const PatientDetails = () => {
             <Pencil className="w-4 h-4 shrink-0" />
             Editar
           </Button>
+          {latestFicha && (
+            <Button
+              variant="outline"
+              className="gap-2 text-brand border-brand-light hover:bg-brand-light/20 w-full sm:w-auto min-h-[48px]"
+              onClick={handleDownloadFichaCompletaPdf}
+              disabled={downloadingFichaId === 'completa'}
+            >
+              {downloadingFichaId === 'completa' ? (
+                <div className="w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin shrink-0" />
+              ) : (
+                <Download className="w-4 h-4 shrink-0" />
+              )}
+              Ficha Completa
+            </Button>
+          )}
           <Button
             variant="outline"
             className="gap-2 text-green-700 border-green-200 hover:bg-green-50 w-full sm:w-auto min-h-[48px]"
@@ -398,15 +436,16 @@ export const PatientDetails = () => {
                           <button
                             onClick={() => handleDownloadFichaPdf(ficha)}
                             disabled={downloadingFichaId === ficha.id}
-                            title="Descargar PDF"
-                            aria-label="Descargar PDF"
-                            className="p-2.5 text-muted hover:text-brand hover:bg-brand-light/50 active:bg-brand-light/50 rounded-lg transition-colors cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center disabled:opacity-50"
+                            title="Descargar PDF de Rutinas (Para el Cliente)"
+                            aria-label="Descargar PDF de Rutinas"
+                            className="px-3 py-2 text-brand bg-brand-light/20 hover:bg-brand-light/40 active:bg-brand-light/50 rounded-lg transition-colors cursor-pointer min-h-[44px] flex items-center justify-center gap-1.5 disabled:opacity-50"
                           >
                             {downloadingFichaId === ficha.id ? (
-                              <div className="w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin" />
+                              <div className="w-4 h-4 border-2 border-brand border-t-transparent rounded-full animate-spin shrink-0" />
                             ) : (
-                              <Download className="w-4 h-4" />
+                              <Download className="w-4 h-4 shrink-0" />
                             )}
+                            <span className="text-xs font-semibold hidden sm:inline">Rutinas</span>
                           </button>
                           <button
                             onClick={() => handleSendWA(ficha)}

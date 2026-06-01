@@ -9,6 +9,7 @@ export type FichaWizardStepId =
   | 'mapa'
   | 'evidencia'
   | 'tratamientos'
+  | 'rutinas'
 
 export const FICHA_WIZARD_STEPS: FichaWizardStepId[] = [
   'consentimiento',
@@ -17,6 +18,7 @@ export const FICHA_WIZARD_STEPS: FichaWizardStepId[] = [
   'mapa',
   'evidencia',
   'tratamientos',
+  'rutinas',
 ]
 
 export const FICHA_WIZARD_STEP_LABELS: Record<FichaWizardStepId, string> = {
@@ -26,6 +28,7 @@ export const FICHA_WIZARD_STEP_LABELS: Record<FichaWizardStepId, string> = {
   mapa: 'Mapa facial',
   evidencia: 'Evidencia',
   tratamientos: 'Tratamientos',
+  rutinas: 'Rutinas',
 }
 
 /** Completed wizard steps inferred from persisted ficha data. */
@@ -42,6 +45,9 @@ export function getCompletedWizardSteps(ficha: FichaClinica): FichaWizardStepId[
   if (ficha.ruta_mapa_facial) completed.push('mapa')
   if (ficha.ruta_foto_antes || ficha.ruta_foto_despues) completed.push('evidencia')
   if ((tr.tratamientos?.length ?? 0) > 0 || tr.tratamientos_notas) completed.push('tratamientos')
+
+  const cf = ficha.cuidados_faciales ?? {}
+  if (cf.rutina_dia || cf.rutina_noche) completed.push('rutinas')
 
   return completed
 }
@@ -102,6 +108,8 @@ export function buildClinicalPrefillFromFicha(ficha: FichaClinica): {
   nivel_estres: string
   rutina_facial: string[]
   rutina_detalle: string
+  rutina_dia: string
+  rutina_noche: string
   biotipo: string
   tipo_piel: string
   estado_piel: string[]
@@ -128,6 +136,8 @@ export function buildClinicalPrefillFromFicha(ficha: FichaClinica): {
     nivel_estres: dm.nivel_estres ?? '',
     rutina_facial: cf.rutina_facial ?? [],
     rutina_detalle: cf.rutina_detalle ?? '',
+    rutina_dia: (cf.rutina_dia as string) ?? '',
+    rutina_noche: (cf.rutina_noche as string) ?? '',
     biotipo: ep.biotipo ?? '',
     tipo_piel: ep.tipo_piel ?? '',
     estado_piel: ep.estado_piel ?? [],

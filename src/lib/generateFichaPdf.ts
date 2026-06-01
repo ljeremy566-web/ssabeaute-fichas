@@ -31,6 +31,8 @@ interface FichaPdfData {
   ruta_foto_antes?: string | null
   ruta_foto_despues?: string | null
   ruta_firma?: string | null
+  rutina_dia?: string
+  rutina_noche?: string
 }
 
 /* ─── Constants ─── */
@@ -588,4 +590,208 @@ export function shareViaWhatsApp(phone: string, patientName: string, fechaServic
   const url = buildWhatsAppUrl(phone, msg)
   if (!url) throw new Error('Teléfono argentino inválido para WhatsApp')
   window.open(url, '_blank', 'noopener,noreferrer')
+}
+
+/* ─── Client-facing Rutinas PDF ─── */
+
+/**
+ * Generates a premium, client-facing PDF containing ONLY the day and night
+ * skincare routines prescribed by the cosmetologist. No medical data included.
+ */
+export function generateRutinasPdf(
+  patient: FichaPdfPatient,
+  ficha: FichaPdfData,
+): jsPDF {
+  const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  const w = pdf.internal.pageSize.getWidth()
+  const h = pdf.internal.pageSize.getHeight()
+  const cw = w - MARGIN * 2
+
+  const rutinaDia   = (ficha.cuidados_faciales?.rutina_dia  as string | undefined) || ficha.rutina_dia   || ''
+  const rutinaNoche = (ficha.cuidados_faciales?.rutina_noche as string | undefined) || ficha.rutina_noche || ''
+
+  /* ── Full-page purple header band ── */
+  pdf.setFillColor(...COLORS.primary)
+  pdf.rect(0, 0, w, 48, 'F')
+
+  // Brand name
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(22)
+  pdf.setTextColor(255, 255, 255)
+  pdf.text('SSABEAUTE', MARGIN, 18)
+
+  // Sub-headline
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(9)
+  pdf.setTextColor(230, 220, 240)
+  pdf.text('TU RUTINA DE CUIDADO PERSONALIZADA', MARGIN, 26)
+
+  // Patient name + date on the right
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(10)
+  pdf.setTextColor(255, 255, 255)
+  pdf.text(patient.nombre_completo || '', w - MARGIN, 18, { align: 'right' })
+
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(8)
+  pdf.setTextColor(230, 220, 240)
+  const dateLabel = format(parseLocalDate(ficha.fecha_servicio), "d 'de' MMMM, yyyy", { locale: es })
+  pdf.text(dateLabel, w - MARGIN, 25, { align: 'right' })
+
+  // Decorative horizontal stripe at bottom of header
+  pdf.setFillColor(255, 255, 255, 0.15)
+  pdf.rect(0, 42, w, 6, 'F')
+
+  let y = 58
+
+  /* ── Helper: draw a full-width routine card ── */
+  const drawRoutineCard = (
+    title: string,
+    subtitleLabel: string,
+    accentFill: [number, number, number],
+    accentText: [number, number, number],
+    badgeText: string,
+    content: string,
+  ): number => {
+    const cardPad = 5
+    const innerW = cw - cardPad * 2
+
+    // Estimate text height first
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(10)
+    const bodyLines = pdf.splitTextToSize(content || 'No especificada.', innerW - 4)
+    const bodyH = bodyLines.length * LINE_HEIGHT
+    const cardH = 12 + 4 + bodyH + cardPad + 4   // header + gap + body + padding + bottom
+
+    // Card shadow simulation (offset rect)
+    pdf.setFillColor(220, 213, 224)
+    pdf.roundedRect(MARGIN + 1.5, y + 1.5, cw, cardH, 3, 3, 'F')
+
+    // Card background
+    pdf.setFillColor(...COLORS.surface)
+    pdf.setDrawColor(...COLORS.outline)
+    pdf.setLineWidth(0.3)
+    pdf.roundedRect(MARGIN, y, cw, cardH, 3, 3, 'FD')
+
+    // Accent left bar
+    pdf.setFillColor(...accentFill)
+    pdf.rect(MARGIN, y, 4, cardH, 'F')
+    pdf.roundedRect(MARGIN, y, 4, cardH, 2, 2, 'F')
+
+    // Badge circle (emoji replacement — solid circle + label)
+    const badgeX = MARGIN + 12
+    const badgeY = y + 8
+    pdf.setFillColor(...accentFill)
+    pdf.circle(badgeX, badgeY, 5, 'F')
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(7)
+    pdf.setTextColor(255, 255, 255)
+    pdf.text(badgeText, badgeX, badgeY + 2.2, { align: 'center' })
+
+    // Title
+    pdf.setFont('helvetica', 'bold')
+    pdf.setFontSize(13)
+    pdf.setTextColor(...accentText)
+    pdf.text(title, MARGIN + 20, y + 9)
+
+    // Subtitle label (small tag)
+    pdf.setFont('helvetica', 'normal')
+    pdf.setFontSize(7)
+    pdf.setTextColor(...COLORS.onSurfaceVariant)
+    pdf.text(subtitleLabel, MARGIN + 20, y + 14.5)
+
+    // Thin separator line
+    pdf.setDrawColor(...COLORS.outline)
+    pdf.setLineWidth(0.3)
+    pdf.line(MARGIN + 6, y + 17, MARGIN + cw - 4, y + 17)
+
+    // Body content
+    const textY = y + 22
+    if (content) {
+      pdf.setFont('helvetica', 'normal')
+      pdf.setFontSize(10)
+      pdf.setTextColor(...COLORS.onSurface)
+      pdf.text(bodyLines, MARGIN + cardPad + 2, textY)
+    } else {
+      pdf.setFont('helvetica', 'italic')
+      pdf.setFontSize(9)
+      pdf.setTextColor(...COLORS.onSurfaceVariant)
+      pdf.text('No especificada.', MARGIN + cardPad + 2, textY)
+    }
+
+    return y + cardH + SECTION_GAP + 4
+  }
+
+  /* ── Day Routine Card ── */
+  const dayAccentFill: [number, number, number]  = [245, 158, 11]   // amber-500
+  const dayAccentText: [number, number, number]  = [146, 64,  14]   // amber-800
+  y = drawRoutineCard(
+    'Rutina de Dia',
+    'Manana · Proteccion y Nutricion',
+    dayAccentFill,
+    dayAccentText,
+    'AM',
+    rutinaDia,
+  )
+
+  y += 2
+
+  /* ── Night Routine Card ── */
+  const nightAccentFill: [number, number, number] = [99,  102, 241]  // indigo-500
+  const nightAccentText: [number, number, number] = [55,  48,  163]  // indigo-900
+  y = drawRoutineCard(
+    'Rutina de Noche',
+    'Noche · Recuperacion y Renovacion',
+    nightAccentFill,
+    nightAccentText,
+    'PM',
+    rutinaNoche,
+  )
+
+  /* ── Note box ── */
+  const noteText = 'Siga las indicaciones de su cosmetologa. Ante cualquier reaccion inusual, suspenda el tratamiento y contactenos.'
+  pdf.setFont('helvetica', 'italic')
+  pdf.setFontSize(8)
+  const noteLines = pdf.splitTextToSize(noteText, cw - 14)
+  const noteH = Math.max(14, noteLines.length * 4.5 + 8)
+
+  // Make sure note fits on page, else push to bottom area
+  if (y + noteH > h - 22) y = h - noteH - 22
+
+  pdf.setFillColor(...COLORS.primaryLight)
+  pdf.setDrawColor(...COLORS.outline)
+  pdf.setLineWidth(0.3)
+  pdf.roundedRect(MARGIN, y, cw, noteH, 2, 2, 'FD')
+  pdf.setTextColor(...COLORS.onSurfaceVariant)
+  pdf.text(noteLines, MARGIN + 5, y + 6)
+
+  /* ── Footer ── */
+  const fy = h - 10
+  pdf.setDrawColor(...COLORS.outline)
+  pdf.setLineWidth(0.3)
+  pdf.line(MARGIN, fy - 4, w - MARGIN, fy - 4)
+
+  pdf.setFont('helvetica', 'bold')
+  pdf.setFontSize(8)
+  pdf.setTextColor(...COLORS.onSurface)
+  pdf.text('SSABEAUTE · Cosmetologia', MARGIN, fy)
+
+  pdf.setFont('helvetica', 'normal')
+  pdf.setFontSize(7)
+  pdf.setTextColor(...COLORS.onSurfaceVariant)
+  pdf.text(
+    `Generado: ${format(new Date(), "d MMM yyyy", { locale: es })}`,
+    w - MARGIN,
+    fy,
+    { align: 'right' },
+  )
+
+  return pdf
+}
+
+export async function downloadRutinasPdf(patient: FichaPdfPatient, ficha: FichaPdfData) {
+  const pdf = generateRutinasPdf(patient, ficha)
+  const dateStr = format(parseLocalDate(ficha.fecha_servicio), 'dd-MM-yyyy')
+  const name = patient.nombre_completo.replace(/\s+/g, '_')
+  pdf.save(`SSABEAUTE_Rutinas_${name}_${dateStr}.pdf`)
 }

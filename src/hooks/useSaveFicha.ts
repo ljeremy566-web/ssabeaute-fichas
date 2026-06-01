@@ -178,6 +178,8 @@ export function useSaveFicha({
       cuidados_faciales: {
         rutina_facial: form.rutina_facial,
         rutina_detalle: form.rutina_detalle,
+        rutina_dia: form.rutina_dia,
+        rutina_noche: form.rutina_noche,
       },
       evaluacion_profesional: {
         biotipo: form.biotipo,
@@ -269,6 +271,46 @@ export function useSaveFicha({
       if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
     }
   }, [form.tratamientos, form.tratamientos_notas, currentFichaId, saving])
+
+  const persistRutinasOnly = async (): Promise<void> => {
+    if (!currentFichaId || !resolvedPacienteId) return
+
+    const saved = await updateFicha(currentFichaId, {
+      cuidados_faciales: {
+        rutina_facial: form.rutina_facial,
+        rutina_detalle: form.rutina_detalle,
+        rutina_dia: form.rutina_dia,
+        rutina_noche: form.rutina_noche,
+      },
+    })
+    await syncPacienteFromFicha(resolvedPacienteId, saved)
+  }
+
+  useEffect(() => {
+    if (!currentFichaId) return
+
+    const timer = setTimeout(() => {
+      if (saving || isAutoSavingRef.current) return
+
+      isAutoSavingRef.current = true
+      setSaveStatus('saving')
+      void (async () => {
+        try {
+          await persistRutinasOnly()
+          setSaveStatus('saved')
+          setSavedSteps(prev => new Set([...prev, 'rutinas']))
+        } catch (err) {
+          console.error(err)
+          setSaveStatus('idle')
+        } finally {
+          isAutoSavingRef.current = false
+        }
+      })()
+    }, 2000)
+
+    return () => clearTimeout(timer)
+  }, [form.rutina_dia, form.rutina_noche, currentFichaId, saving])
+
 
   return {
     saving,

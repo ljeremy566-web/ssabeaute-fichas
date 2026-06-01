@@ -28,6 +28,9 @@ export interface FichaFormState {
   // Tab 4: Fotos
   foto_antes_base64: string | null
   foto_despues_base64: string | null
+  // Tab 6: Rutinas
+  rutina_dia: string
+  rutina_noche: string
   // Consentimiento
   tratamientos: string[]
   tratamientos_notas: string
@@ -49,11 +52,12 @@ export const defaultFormState: FichaFormState = {
   mapa_facial_base64: null,
   mapa_genero: 'female',
   foto_antes_base64: null, foto_despues_base64: null,
+  rutina_dia: '', rutina_noche: '',
   tratamientos: [], tratamientos_notas: '',
   firma_base64: null, acepta_consentimiento: false, permite_fotos_redes: false,
 }
 
-export const WIZARD_STEPS = ['consentimiento', 'anamnesis', 'evaluacion', 'mapa', 'evidencia', 'tratamientos'] as const
+export const WIZARD_STEPS = ['consentimiento', 'anamnesis', 'evaluacion', 'mapa', 'evidencia', 'tratamientos', 'rutinas'] as const
 export type WizardStepId = typeof WIZARD_STEPS[number]
 
 export function useIntakeForm() {

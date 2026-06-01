@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom'
-import { Stethoscope, ClipboardCheck, PenTool, Camera, FileSignature, ClipboardList, X, Loader2, Download, MessageCircle, Check, Users } from 'lucide-react'
+import { Stethoscope, ClipboardCheck, PenTool, Camera, FileSignature, ClipboardList, X, Loader2, Download, MessageCircle, Check, Users, BookOpen } from 'lucide-react'
 import { WizardTabNav, type WizardTab } from '../components/intake/WizardTabNav'
 import { WizardStepFooter } from '../components/intake/WizardStepFooter'
 import { FacialMapCanvas } from '../components/intake/FacialMapCanvas'
@@ -16,7 +16,7 @@ import { VisitContextPanel } from '../components/intake/VisitContextPanel'
 import { getPacienteById } from '../lib/pacienteService'
 import { getFichaById, getFichasByPacienteId, type FichaClinica } from '../lib/fichaService'
 import { buildClinicalPrefillFromFicha, getCompletedWizardSteps, getPreviousMonthFicha, getPreviousMonthLabel } from '../lib/fichaUtils'
-import { downloadFichaPdf, shareViaWhatsApp } from '../lib/generateFichaPdf'
+import { downloadRutinasPdf, shareViaWhatsApp } from '../lib/generateFichaPdf'
 import { Snackbar } from '../components/ui/Snackbar'
 import { useConsentSessionSync } from '../hooks/useConsentSessionSync'
 import {
@@ -231,6 +231,8 @@ export const ClinicalIntakeWizard = () => {
             firma_base64: fichaData.ruta_firma || null,
             acepta_consentimiento: tr.acepta_consentimiento || false,
             permite_fotos_redes: tr.permite_fotos_redes ?? patientData.permite_fotos_redes ?? false,
+            rutina_dia: (cf.rutina_dia as string) || '',
+            rutina_noche: (cf.rutina_noche as string) || '',
           })
           setRemoteConsentCompleted(!!(tr.acepta_consentimiento && fichaData.ruta_firma))
           setCurrentFichaId(fichaId)
@@ -396,19 +398,11 @@ export const ClinicalIntakeWizard = () => {
     if (!savedFicha) return
     setDownloadingPdf(true)
     try {
-      await downloadFichaPdf(
+      await downloadRutinasPdf(
         { nombre_completo: patientName, telefono: patientPhone },
         {
           fecha_servicio: savedFicha.fecha_servicio,
-          motivo_consulta: savedFicha.motivo_consulta ?? undefined,
-          datos_medicos: savedFicha.datos_medicos,
           cuidados_faciales: savedFicha.cuidados_faciales,
-          evaluacion_profesional: savedFicha.evaluacion_profesional,
-          tratamientos_realizados: savedFicha.tratamientos_realizados,
-          ruta_mapa_facial: savedFicha.ruta_mapa_facial,
-          ruta_foto_antes: savedFicha.ruta_foto_antes,
-          ruta_foto_despues: savedFicha.ruta_foto_despues,
-          ruta_firma: savedFicha.ruta_firma,
         },
       )
     } catch (err) {
@@ -443,6 +437,7 @@ export const ClinicalIntakeWizard = () => {
     { id: 'mapa', label: 'Mapa Facial', icon: <PenTool className="w-5 h-5" />, completed: savedSteps.has('mapa') },
     { id: 'evidencia', label: 'Evidencia', icon: <Camera className="w-5 h-5" />, completed: savedSteps.has('evidencia') },
     { id: 'tratamientos', label: 'Tratamientos', icon: <ClipboardList className="w-5 h-5" />, completed: savedSteps.has('tratamientos') },
+    { id: 'rutinas', label: 'Rutinas', icon: <BookOpen className="w-5 h-5" />, completed: savedSteps.has('rutinas') },
   ]
 
   if (!resolvedPacienteId) {
@@ -882,6 +877,47 @@ export const ClinicalIntakeWizard = () => {
                 />
               </div>
             )}
+
+            {/* ─── TAB 7: RUTINAS ─── */}
+            {activeTab === 'rutinas' && (
+              <div className="animate-google-slide-up space-y-6">
+                {/* Rutina de Día */}
+                <div className="p-5 bg-surface rounded-xl border border-outline">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                      <span className="text-amber-600 text-base">☀️</span>
+                    </div>
+                    <SectionTitle>Rutina de Día</SectionTitle>
+                  </div>
+                  <textarea
+                    id="rutina-dia-textarea"
+                    value={form.rutina_dia}
+                    onChange={e => updateForm('rutina_dia', e.target.value)}
+                    rows={6}
+                    className="w-full px-4 py-3 rounded-xl border border-outline text-sm text-on-surface placeholder:text-on-surface-variant/50 bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
+                    placeholder="Describe los pasos de la rutina de día: limpiador, tónico, sérum, hidratante, protector solar..."
+                  />
+                </div>
+
+                {/* Rutina de Noche */}
+                <div className="p-5 bg-surface rounded-xl border border-outline">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
+                      <span className="text-indigo-600 text-base">🌙</span>
+                    </div>
+                    <SectionTitle>Rutina de Noche</SectionTitle>
+                  </div>
+                  <textarea
+                    id="rutina-noche-textarea"
+                    value={form.rutina_noche}
+                    onChange={e => updateForm('rutina_noche', e.target.value)}
+                    rows={6}
+                    className="w-full px-4 py-3 rounded-xl border border-outline text-sm text-on-surface placeholder:text-on-surface-variant/50 bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
+                    placeholder="Describe los pasos de la rutina de noche: desmaquillante, limpiador, tónico, sérum, crema nocturna..."
+                  />
+                </div>
+              </div>
+            )}
           </div>
         </main>
         </div>
@@ -938,7 +974,7 @@ export const ClinicalIntakeWizard = () => {
               className="w-full sm:w-auto gap-2"
             >
               {downloadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              {downloadingPdf ? 'Generando...' : 'Descargar PDF'}
+              {downloadingPdf ? 'Generando...' : 'Descargar PDF (Rutinas)'}
             </Button>
           </ModalActions>
         }
