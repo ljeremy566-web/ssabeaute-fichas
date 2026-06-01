@@ -71,6 +71,7 @@ export function DateInput({
   useEffect(() => {
     setText(formatDisplayDate(value))
     if (value) setViewDate(parseLocalDate(value))
+    setInputError('')
   }, [value])
 
   const years = useMemo(() => {

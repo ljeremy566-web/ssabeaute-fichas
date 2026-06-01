@@ -322,6 +322,7 @@ export const ClinicalIntakeWizard = () => {
     if (step === 'anamnesis') {
       const motivoErr = validateMotivoConsulta(form.motivo_servicios, form.motivo_otro)
       if (motivoErr) return motivoErr
+      if (!form.embarazo) return 'Indica el estado de embarazo de la paciente'
     }
     if (step === 'evaluacion' && (!form.biotipo || !form.tipo_piel)) {
       return 'Selecciona el biotipo y el tipo de piel'

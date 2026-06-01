@@ -25,11 +25,11 @@ export function ConsentimientoBlock({
 
   const consentLabel = isPatient
     ? 'Acepto el consentimiento informado y autorizo el procedimiento.'
-    : 'El paciente acepta el consentimiento informado y autoriza el procedimiento.'
+    : 'El paciente acepta el consentimiento informado y autoriza el procedimiento. (Obligatorio)'
 
   const redesLabel = isPatient
     ? 'Autorizo la publicación de mis fotografías en redes sociales (Instagram, etc.).'
-    : 'El paciente autoriza la publicación de sus fotografías en redes sociales (Instagram, etc.).'
+    : 'El paciente autoriza la publicación de sus fotografías en redes sociales (Instagram, etc.). (Opcional)'
 
   return (
     <div className="space-y-6">

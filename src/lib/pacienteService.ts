@@ -116,7 +116,7 @@ export function buildPacienteInsert(
 ): Record<string, unknown> {
   const payload: Record<string, unknown> = {
     nombre_completo: input.nombre_completo,
-    telefono: normalizeArgentinaWhatsApp(input.telefono ?? ''),
+    telefono: input.telefono?.trim() ? normalizeArgentinaWhatsApp(input.telefono.trim()) : null,
     fecha_registro: input.fecha_registro ?? new Date().toISOString().split('T')[0],
   }
 
@@ -165,8 +165,8 @@ export async function updatePaciente(
 ): Promise<Paciente> {
   const payload = {
     ...updates,
-    ...(updates.telefono != null && updates.telefono !== ''
-      ? { telefono: normalizeArgentinaWhatsApp(updates.telefono) }
+    ...(updates.telefono != null
+      ? { telefono: updates.telefono.trim() ? normalizeArgentinaWhatsApp(updates.telefono.trim()) : null }
       : {}),
   }
   const { data, error } = await insforge.database

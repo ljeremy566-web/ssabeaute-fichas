@@ -5,7 +5,7 @@ import { X } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { Select } from '../ui/Select'
 import { DateInput } from '../ui/DateInput'
-import { PhoneInput, validatePhoneField } from '../ui/PhoneInput'
+import { PhoneInput } from '../ui/PhoneInput'
 import { calcAge } from '../../lib/dateUtils'
 
 export interface PatientFormData {
@@ -136,7 +136,10 @@ export const PatientFormModal = ({ isOpen, onClose, onSubmit, initialData, isLoa
             <div>
               <label className="block text-sm font-medium text-on-surface-variant mb-1.5">Nombre completo *</label>
               <input
-                {...register('nombre_completo', { required: 'El nombre es obligatorio' })}
+                {...register('nombre_completo', {
+                  required: 'El nombre es obligatorio',
+                  minLength: { value: 3, message: 'Ingresa al menos 3 caracteres' },
+                })}
                 className={cn(
                   'w-full px-4 py-2.5 rounded-xl border text-sm text-on-surface placeholder:text-on-surface-variant/50 bg-transparent transition-all',
                   'focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary',
@@ -153,20 +156,25 @@ export const PatientFormModal = ({ isOpen, onClose, onSubmit, initialData, isLoa
                 <label className="block text-sm font-medium text-on-surface-variant mb-1.5">Correo</label>
                 <input
                   type="email"
-                  {...register('correo')}
-                  className="w-full px-4 py-2.5 rounded-xl border border-outline text-sm text-on-surface placeholder:text-on-surface-variant/50 bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                  {...register('correo', {
+                    pattern: {
+                      value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                      message: 'Correo electrónico inválido',
+                    },
+                  })}
+                  className={cn(
+                    'w-full px-4 py-2.5 rounded-xl border text-sm text-on-surface placeholder:text-on-surface-variant/50 bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all',
+                    errors.correo ? 'border-error' : 'border-outline',
+                  )}
                   placeholder="correo@ejemplo.com"
                 />
+                {errors.correo && <span className="text-xs text-error mt-1 block">{errors.correo.message}</span>}
               </div>
               <div>
-                <label className="block text-sm font-medium text-on-surface-variant mb-1.5">Teléfono (WhatsApp) *</label>
+                <label className="block text-sm font-medium text-on-surface-variant mb-1.5">Teléfono (WhatsApp)</label>
                 <Controller
                   name="telefono"
                   control={control}
-                  rules={{
-                    required: 'El teléfono es obligatorio',
-                    validate: validatePhoneField,
-                  }}
                   render={({ field }) => (
                     <PhoneInput
                       value={field.value}

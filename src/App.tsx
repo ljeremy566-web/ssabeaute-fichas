@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { Loader2 } from 'lucide-react'
 import { Login } from './pages/Login'
 import { ProtectedRoute } from './components/ProtectedRoute'
+import { useKeepAlive } from './hooks/useKeepAlive'
 
 const AdminDashboard = lazy(() =>
   import('./pages/AdminDashboard').then(m => ({ default: m.AdminDashboard })),
@@ -27,6 +28,8 @@ function PageLoader() {
 }
 
 function App() {
+  useKeepAlive()
+
   return (
     <Suspense fallback={<PageLoader />}>
       <Routes>

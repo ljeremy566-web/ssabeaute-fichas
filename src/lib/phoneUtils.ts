@@ -68,16 +68,30 @@ export function formatArgentinaNationalInput(digits: string): string {
   return `${d.slice(0, 3)} ${d.slice(3, 6)}-${d.slice(6)}`
 }
 
-/** Display stored phone as +54 9 11 2254-2737 */
+/** Display stored phone — tries to format as Argentine number, falls back to raw value */
 export function formatArgentinaPhoneDisplay(phone: string): string {
+  if (!phone) return phone
   const national = extractArgentinaNationalNumber(phone)
-  if (!national) return phone
-  const formatted = formatArgentinaNationalInput(national)
-  return formatted ? `+54 9 ${formatted}` : phone
+  if (national && national.length >= 8) {
+    const formatted = formatArgentinaNationalInput(national)
+    if (formatted) return `+54 9 ${formatted}`
+  }
+  // Not a valid Argentine number — return as-is
+  return phone
 }
 
+/** Build wa.me URL for any phone number (Argentine or international free-format) */
 export function buildWhatsAppUrl(phone: string, message: string): string | null {
-  const clean = normalizeArgentinaWhatsApp(phone)
-  if (!/^549\d{10}$/.test(clean)) return null
-  return `https://wa.me/${clean}?text=${encodeURIComponent(message)}`
+  if (!phone) return null
+  // Try Argentine normalization first
+  const arClean = normalizeArgentinaWhatsApp(phone)
+  if (/^549\d{10}$/.test(arClean)) {
+    return `https://wa.me/${arClean}?text=${encodeURIComponent(message)}`
+  }
+  // Fallback: strip all non-digit chars (except leading +) and use as-is
+  const digits = phone.replace(/[^\d+]/g, '').replace(/^\+/, '')
+  if (digits.length >= 7) {
+    return `https://wa.me/${digits}?text=${encodeURIComponent(message)}`
+  }
+  return null
 }

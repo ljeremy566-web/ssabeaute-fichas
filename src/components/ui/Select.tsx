@@ -131,7 +131,7 @@ export function Select({
                   role="option"
                   aria-selected={isSelected}
                   onClick={() => {
-                    onChange(option.value)
+                    onChange(isSelected ? '' : option.value)
                     setIsOpen(false)
                   }}
                   className={cn(
