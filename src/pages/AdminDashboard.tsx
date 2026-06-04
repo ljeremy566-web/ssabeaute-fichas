@@ -15,6 +15,7 @@ import {
 import {
   PatientDirectoryToolbar,
   type ConsentFilter,
+  type SocialMediaFilter,
   type DirectorySort,
 } from '../components/patients/PatientDirectoryToolbar'
 import {
@@ -47,6 +48,7 @@ export const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [consentFilter, setConsentFilter] = useState<ConsentFilter>('all')
+  const [socialMediaFilter, setSocialMediaFilter] = useState<SocialMediaFilter>('all')
   const [sortBy, setSortBy] = useState<DirectorySort>('name')
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [page, setPage] = useState(1)
@@ -92,7 +94,7 @@ export const AdminDashboard = () => {
 
   useEffect(() => {
     setPage(1)
-  }, [debouncedSearch, consentFilter, sortBy])
+  }, [debouncedSearch, consentFilter, socialMediaFilter, sortBy])
 
   useEffect(() => {
     if (debouncedSearch.length < 2) {
@@ -113,6 +115,7 @@ export const AdminDashboard = () => {
               nombre_completo: p.nombre_completo,
               telefono: p.telefono,
               consiente_tratamiento: p.consiente_tratamiento,
+              permite_fotos_redes: p.permite_fotos_redes,
               created_at: p.created_at,
               fecha_registro: p.fecha_registro,
             })),
@@ -158,6 +161,13 @@ export const AdminDashboard = () => {
         if (consentFilter === 'all') return true
         return entry.meta.consentimiento === consentFilter
       })
+      .filter(entry => {
+        if (socialMediaFilter === 'all') return true
+        if (socialMediaFilter === 'yes') return entry.patient.permite_fotos_redes === true
+        if (socialMediaFilter === 'no') return entry.patient.permite_fotos_redes === false
+        if (socialMediaFilter === 'pending') return entry.patient.permite_fotos_redes === null
+        return true
+      })
 
     entries.sort((a, b) => {
       if (sortBy === 'name') {
@@ -179,7 +189,7 @@ export const AdminDashboard = () => {
     })
 
     return entries
-  }, [basePatients, fichasByPaciente, consentFilter, sortBy])
+  }, [basePatients, fichasByPaciente, consentFilter, socialMediaFilter, sortBy])
 
   const totalPages = Math.max(1, Math.ceil(directoryEntries.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages)
@@ -258,6 +268,8 @@ export const AdminDashboard = () => {
             onSearchChange={setSearchTerm}
             consentFilter={consentFilter}
             onConsentFilterChange={setConsentFilter}
+            socialMediaFilter={socialMediaFilter}
+            onSocialMediaFilterChange={setSocialMediaFilter}
             sortBy={sortBy}
             onSortChange={setSortBy}
             filtersOpen={filtersOpen}

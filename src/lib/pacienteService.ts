@@ -40,7 +40,7 @@ export type PacienteUpdate = Partial<Omit<Paciente, 'id' | 'created_at'>>
 /** Slim row for patient directory list */
 export type PacienteDirectory = Pick<
   Paciente,
-  'id' | 'nombre_completo' | 'telefono' | 'consiente_tratamiento' | 'created_at' | 'fecha_registro'
+  'id' | 'nombre_completo' | 'telefono' | 'consiente_tratamiento' | 'permite_fotos_redes' | 'created_at' | 'fecha_registro'
 >
 
 // ── Table constant ─────────────────────────────────────────
@@ -67,7 +67,7 @@ export async function getAllPacientes(): Promise<Paciente[]> {
 export async function getPacientesDirectory(): Promise<PacienteDirectory[]> {
   const { data, error } = await insforge.database
     .from(TABLE)
-    .select('id,nombre_completo,telefono,consiente_tratamiento,created_at,fecha_registro')
+    .select('id,nombre_completo,telefono,consiente_tratamiento,permite_fotos_redes,created_at,fecha_registro')
     .order('nombre_completo', { ascending: true })
 
   if (error) throw new Error(`Error fetching pacientes directory: ${error.message}`)

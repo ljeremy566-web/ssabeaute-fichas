@@ -66,19 +66,37 @@ export function PatientDirectoryRow({
         </button>
 
         {/* Columna 2 — Estado clínico */}
-        <div className="flex flex-col gap-1 lg:flex-1 lg:items-start lg:min-w-[180px]">
-          <span
-            className={cn(
-              'inline-flex w-fit items-center rounded-full px-2.5 py-1 text-xs font-semibold font-outfit',
-              isFirmado
-                ? 'bg-success-light text-success'
-                : meta.consentimiento === 'sin_consulta'
-                  ? 'bg-surface-container text-muted'
-                  : 'bg-warning-light text-warning',
-            )}
-          >
-            {badgeLabel}
-          </span>
+        <div className="flex flex-col gap-1.5 lg:flex-1 lg:items-start lg:min-w-[180px]">
+          <div className="flex flex-wrap gap-1.5">
+            <span
+              className={cn(
+                'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold font-outfit',
+                isFirmado
+                  ? 'bg-success-light text-success border border-success/10'
+                  : meta.consentimiento === 'sin_consulta'
+                    ? 'bg-surface-container text-muted border border-border'
+                    : 'bg-warning-light text-warning border border-warning/10',
+              )}
+            >
+              {badgeLabel}
+            </span>
+            <span
+              className={cn(
+                'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold font-outfit transition-all duration-200',
+                patient.permite_fotos_redes === true
+                  ? 'bg-success-light text-success border border-success/15'
+                  : patient.permite_fotos_redes === false
+                    ? 'bg-error-light text-error border border-error/15'
+                    : 'bg-surface-container text-muted border border-border',
+              )}
+            >
+              {patient.permite_fotos_redes === true
+                ? 'Redes: Sí'
+                : patient.permite_fotos_redes === false
+                  ? 'Redes: No'
+                  : 'Redes: Pendiente'}
+            </span>
+          </div>
           <p className="text-xs text-muted">
             {meta.ultimaVisita
               ? `Última visita: ${format(parseLocalDate(meta.ultimaVisita), "d MMM yyyy", { locale: es })}`
