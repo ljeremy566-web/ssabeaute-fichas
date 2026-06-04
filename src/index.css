@@ -69,6 +69,13 @@
   --animate-google-slide-left: googleSlideLeft 0.35s cubic-bezier(0.3, 0, 0, 1) forwards;
   --animate-google-slide-up: googleSlideUp 0.35s cubic-bezier(0.3, 0, 0, 1) forwards;
 
+  --animate-page-enter-forward: pageEnterForward 0.28s cubic-bezier(0, 0, 0.2, 1) forwards;
+  --animate-page-enter-back: pageEnterBack 0.28s cubic-bezier(0, 0, 0.2, 1) forwards;
+  --animate-page-enter-fade: pageEnterFade 0.28s cubic-bezier(0.3, 0, 0, 1) forwards;
+  --animate-page-exit-forward: pageExitForward 0.21s cubic-bezier(0.4, 0, 1, 1) forwards;
+  --animate-page-exit-back: pageExitBack 0.21s cubic-bezier(0.4, 0, 1, 1) forwards;
+  --animate-page-exit-fade: pageExitFade 0.21s cubic-bezier(0.4, 0, 1, 1) forwards;
+
   @keyframes slideUpFade {
     from { opacity: 0; transform: translateY(12px); }
     to { opacity: 1; transform: translateY(0); }
@@ -100,6 +107,31 @@
   @keyframes googleSlideUp {
     from { opacity: 0; transform: translateY(20px); }
     to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes pageEnterForward {
+    from { opacity: 0; transform: translateX(18px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes pageEnterBack {
+    from { opacity: 0; transform: translateX(-18px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+  @keyframes pageEnterFade {
+    from { opacity: 0; transform: translateY(10px) scale(0.992); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes pageExitForward {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(-14px); }
+  }
+  @keyframes pageExitBack {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(14px); }
+  }
+  @keyframes pageExitFade {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(-8px) scale(0.992); }
   }
 }
 
@@ -222,6 +254,17 @@
 @media (min-width: 768px) {
   .pb-mobile-nav {
     padding-bottom: 2rem;
+  }
+}
+
+.page-transition-root {
+  /* removed will-change to avoid breaking fixed/sticky positioning */
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-transition-root {
+    animation: none !important;
+    will-change: auto;
   }
 }
 

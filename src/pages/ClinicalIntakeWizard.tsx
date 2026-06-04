@@ -9,6 +9,7 @@ import { ConsentimientoBlock } from '../components/intake/ConsentimientoBlock'
 import { ConsentSyncPanel } from '../components/intake/ConsentSyncPanel'
 import { MotivoConsultaSelector } from '../components/intake/MotivoConsultaSelector'
 import { TratamientosPanel } from '../components/intake/TratamientosPanel'
+import { RutinasEditor } from '../components/rutinas/RutinasEditor'
 import { Modal, ModalActions } from '../components/ui/Modal'
 import { Button } from '../components/ui/Button'
 import { cn } from '../lib/cn'
@@ -16,6 +17,8 @@ import { VisitContextPanel } from '../components/intake/VisitContextPanel'
 import { getPacienteById } from '../lib/pacienteService'
 import { getFichaById, getFichasByPacienteId, type FichaClinica } from '../lib/fichaService'
 import { buildClinicalPrefillFromFicha, getCompletedWizardSteps, getPreviousMonthFicha, getPreviousMonthLabel } from '../lib/fichaUtils'
+import { partitionFichas, getLatestConsultaPresencial } from '../lib/patientHistoryUtils'
+import { isSoloRutinaFicha } from '../lib/soloRutinaFicha'
 import { downloadRutinasPdf, shareViaWhatsApp } from '../lib/generateFichaPdf'
 import { Snackbar } from '../components/ui/Snackbar'
 import { useConsentSessionSync } from '../hooks/useConsentSessionSync'
@@ -241,7 +244,16 @@ export const ClinicalIntakeWizard = () => {
           const priorFichas = await getFichasByPacienteId(resolvedPacienteId)
           if (aborted) return
 
-          if (priorFichas.length === 0) {
+          const { consultas: priorConsultas } = partitionFichas(priorFichas)
+          const prefillFromId = searchParams.get('prefillFrom')
+          let prefillSource = getLatestConsultaPresencial(priorConsultas)
+
+          if (prefillFromId) {
+            const chosen = priorConsultas.find(f => f.id === prefillFromId)
+            if (chosen && !isSoloRutinaFicha(chosen)) prefillSource = chosen
+          }
+
+          if (priorConsultas.length === 0) {
             setVisitMode('first')
             setPreviousMonthFicha(null)
             setForm({
@@ -250,10 +262,10 @@ export const ClinicalIntakeWizard = () => {
             })
           } else {
             setVisitMode('followup')
-            setPreviousMonthFicha(getPreviousMonthFicha(priorFichas))
+            setPreviousMonthFicha(getPreviousMonthFicha(priorConsultas))
             setForm({
               ...defaultFormState,
-              ...buildClinicalPrefillFromFicha(priorFichas[0]),
+              ...(prefillSource ? buildClinicalPrefillFromFicha(prefillSource) : {}),
               permite_fotos_redes: patientData.permite_fotos_redes ?? false,
             })
           }
@@ -269,7 +281,7 @@ export const ClinicalIntakeWizard = () => {
     })()
 
     return () => { aborted = true }
-  }, [resolvedPacienteId, fichaId])
+  }, [resolvedPacienteId, fichaId, searchParams])
 
 
 
@@ -539,6 +551,7 @@ export const ClinicalIntakeWizard = () => {
             {visitMode && !fichaId && (
               <VisitContextPanel
                 mode={visitMode}
+                pacienteId={resolvedPacienteId}
                 previousMonthFicha={previousMonthFicha}
                 previousMonthLabel={getPreviousMonthLabel()}
               />
@@ -880,42 +893,13 @@ export const ClinicalIntakeWizard = () => {
 
             {/* ─── TAB 7: RUTINAS ─── */}
             {activeTab === 'rutinas' && (
-              <div className="animate-google-slide-up space-y-6">
-                {/* Rutina de Día */}
-                <div className="p-5 bg-surface rounded-xl border border-outline">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                      <span className="text-amber-600 text-base">☀️</span>
-                    </div>
-                    <SectionTitle>Rutina de Día</SectionTitle>
-                  </div>
-                  <textarea
-                    id="rutina-dia-textarea"
-                    value={form.rutina_dia}
-                    onChange={e => updateForm('rutina_dia', e.target.value)}
-                    rows={6}
-                    className="w-full px-4 py-3 rounded-xl border border-outline text-sm text-on-surface placeholder:text-on-surface-variant/50 bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
-                    placeholder="Describe los pasos de la rutina de día: limpiador, tónico, sérum, hidratante, protector solar..."
-                  />
-                </div>
-
-                {/* Rutina de Noche */}
-                <div className="p-5 bg-surface rounded-xl border border-outline">
-                  <div className="flex items-center gap-2 mb-4">
-                    <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center shrink-0">
-                      <span className="text-indigo-600 text-base">🌙</span>
-                    </div>
-                    <SectionTitle>Rutina de Noche</SectionTitle>
-                  </div>
-                  <textarea
-                    id="rutina-noche-textarea"
-                    value={form.rutina_noche}
-                    onChange={e => updateForm('rutina_noche', e.target.value)}
-                    rows={6}
-                    className="w-full px-4 py-3 rounded-xl border border-outline text-sm text-on-surface placeholder:text-on-surface-variant/50 bg-transparent focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
-                    placeholder="Describe los pasos de la rutina de noche: desmaquillante, limpiador, tónico, sérum, crema nocturna..."
-                  />
-                </div>
+              <div className="animate-google-slide-up">
+                <RutinasEditor
+                  rutinaDia={form.rutina_dia}
+                  rutinaNoche={form.rutina_noche}
+                  onRutinaDiaChange={v => updateForm('rutina_dia', v)}
+                  onRutinaNocheChange={v => updateForm('rutina_noche', v)}
+                />
               </div>
             )}
           </div>

@@ -1,6 +1,7 @@
 import type { FichaClinica } from './fichaService'
 import { parseLocalDate } from './dateUtils'
 import { parseMotivoConsulta } from './serviciosCatalogo'
+import { isSoloRutinaFicha } from './soloRutinaFicha'
 
 export type FichaWizardStepId =
   | 'consentimiento'
@@ -33,6 +34,11 @@ export const FICHA_WIZARD_STEP_LABELS: Record<FichaWizardStepId, string> = {
 
 /** Completed wizard steps inferred from persisted ficha data. */
 export function getCompletedWizardSteps(ficha: FichaClinica): FichaWizardStepId[] {
+  if (isSoloRutinaFicha(ficha)) {
+    const cf = ficha.cuidados_faciales ?? {}
+    return cf.rutina_dia || cf.rutina_noche ? ['rutinas'] : []
+  }
+
   const tr = ficha.tratamientos_realizados ?? {}
   const ep = ficha.evaluacion_profesional ?? {}
   const parsedMotivo = parseMotivoConsulta(ficha.motivo_consulta)
@@ -53,6 +59,12 @@ export function getCompletedWizardSteps(ficha: FichaClinica): FichaWizardStepId[
 }
 
 export function getPendingWizardSteps(ficha: FichaClinica): FichaWizardStepId[] {
+  if (isSoloRutinaFicha(ficha)) {
+    const cf = ficha.cuidados_faciales ?? {}
+    if (cf.rutina_dia || cf.rutina_noche) return []
+    return ['rutinas']
+  }
+
   const completed = new Set(getCompletedWizardSteps(ficha))
   return FICHA_WIZARD_STEPS.filter(step => !completed.has(step))
 }

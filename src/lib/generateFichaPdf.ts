@@ -592,6 +592,17 @@ export function shareViaWhatsApp(phone: string, patientName: string, fechaServic
   window.open(url, '_blank', 'noopener,noreferrer')
 }
 
+export function shareRutinasViaWhatsApp(phone: string, patientName: string, fechaServicio?: string) {
+  const datePart = fechaServicio
+    ? ` del ${format(parseLocalDate(fechaServicio), "d 'de' MMMM yyyy", { locale: es })}`
+    : ''
+  const msg =
+    `¡Hola ${patientName}! Te enviamos tu rutina de cuidado personalizada${datePart} desde SSABEAUTE. Adjuntamos el PDF con los pasos de día y noche. Si tienes dudas sobre algún producto o paso, escríbenos. ¡Gracias!`
+  const url = buildWhatsAppUrl(phone, msg)
+  if (!url) throw new Error('Teléfono argentino inválido para WhatsApp')
+  window.open(url, '_blank', 'noopener,noreferrer')
+}
+
 /* ─── Client-facing Rutinas PDF ─── */
 
 /**

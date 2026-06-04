@@ -1,5 +1,6 @@
 import { format } from 'date-fns'
 import { es } from 'date-fns/locale'
+import { Link } from 'react-router-dom'
 import { UserPlus, History } from 'lucide-react'
 import { cn } from '../../lib/cn'
 import type { FichaClinica } from '../../lib/fichaService'
@@ -7,6 +8,7 @@ import { parseLocalDate } from '../../lib/dateUtils'
 
 interface VisitContextPanelProps {
   mode: 'first' | 'followup'
+  pacienteId?: string
   previousMonthFicha: FichaClinica | null
   previousMonthLabel: string
   className?: string
@@ -14,6 +16,7 @@ interface VisitContextPanelProps {
 
 export function VisitContextPanel({
   mode,
+  pacienteId,
   previousMonthFicha,
   previousMonthLabel,
   className,
@@ -87,6 +90,14 @@ export function VisitContextPanel({
               </p>
             )}
           </div>
+          {pacienteId && (
+            <Link
+              to={`/admin/paciente/${pacienteId}`}
+              className="inline-block mt-3 text-xs font-semibold text-primary hover:underline"
+            >
+              Ver historial del paciente
+            </Link>
+          )}
         </div>
       </div>
     </div>

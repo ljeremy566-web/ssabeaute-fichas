@@ -20,3 +20,24 @@ Key patterns:
 - Reference users with `auth.users(id)`; use `auth.uid()` in RLS policies.
 - For storage uploads, persist both the returned `url` and `key`.
 <!-- INSFORGE:END -->
+
+
+## Front-end
+
+Utiliza Clean Code y como regla manten el codigo simple e investigar acerca de mejores practicas de typescript y react.
+
+### Tailwind
+
+Para Tailwind Css usa los colores de material design. Puedes obtener los colores en https://m3.material.io/theme-builder
+
+Usar bordes suaves y siempre rounded, nada debe ser tan cuadrado. Evitar el uso de sombras pesadas.
+
+Siempre utilizar animaciones suaves de transitions.
+
+Las funciones deben estar nombradas de modo que cumpla con la nomenclatura de react query y esten dedicadas a lo que se esta especificando en su nombre de manera que si el nombre de la funcion habla sobre una sola cosa y termina haciendo mas cosas de las especificadas en su nombre, se debe refactorizar aplicando clean code o sobrecarga de metodos y programacion funcional. No intentes optimizar el codigo de una manera excesiva, ni tampoco uses demasiados archivos.
+
+## Backend
+Evitar N+1 queries a la base de datos.
+
+## Reglas generales
+Siempre crear endpoints si son necesarios y bien documentados.
